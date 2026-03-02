@@ -1,14 +1,29 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import Scene from '@/components/Scene'
+
+function requestFS(el: HTMLElement) {
+  const r = el as HTMLElement & { webkitRequestFullscreen?: () => Promise<void> }
+  return r.requestFullscreen?.() ?? r.webkitRequestFullscreen?.()
+}
+
+function exitFS() {
+  const d = document as Document & { webkitExitFullscreen?: () => Promise<void> }
+  return d.exitFullscreen?.() ?? d.webkitExitFullscreen?.()
+}
+
+function isFS() {
+  const d = document as Document & { webkitFullscreenElement?: Element }
+  return !!(d.fullscreenElement ?? d.webkitFullscreenElement)
+}
 
 function FullscreenButton() {
   const toggle = useCallback(() => {
-    if (document.fullscreenElement) {
-      document.exitFullscreen()
+    if (isFS()) {
+      exitFS()
     } else {
-      document.documentElement.requestFullscreen()
+      requestFS(document.documentElement)
     }
   }, [])
 
@@ -26,14 +41,49 @@ function FullscreenButton() {
 }
 
 export default function Home() {
+  const [debug, setDebug] = useState(false)
   const [ready, setReady] = useState(false)
+  const [entered, setEntered] = useState(false)
   const onReady = useCallback(() => setReady(true), [])
+
+  const [isTouch, setIsTouch] = useState(false)
+
+  useEffect(() => {
+    setIsTouch('ontouchstart' in window || navigator.maxTouchPoints > 0)
+    setDebug(new URLSearchParams(window.location.search).get('debug') === 'true')
+  }, [])
+
+  const handleEnter = useCallback(() => {
+    // Try native Fullscreen API (works on desktop + Android Chrome)
+    try { requestFS(document.documentElement) } catch {}
+    // iOS fallback: scroll to hide address bar
+    setTimeout(() => window.scrollTo(0, 1), 50)
+    // Request gyro permission on iOS
+    try {
+      const doe = DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> }
+      doe.requestPermission?.()
+    } catch {}
+    // Delay state change so browser processes fullscreen from the gesture
+    setTimeout(() => setEntered(true), 100)
+  }, [])
 
   return (
     <main className="relative h-dvh w-screen overflow-hidden">
+      {/* Click/tap-to-enter fullscreen prompt */}
+      {ready && !entered && (
+        <div
+          onClick={handleEnter}
+          className="absolute inset-0 z-[200] flex items-center justify-center cursor-pointer"
+        >
+          <div className="text-[10px] sm:text-xs tracking-[0.4em] uppercase opacity-50 animate-pulse">
+            {isTouch ? 'Tap to enter' : 'Click to enter'}
+          </div>
+        </div>
+      )}
+
       {/* 3D Scene */}
       <div className="absolute inset-0 z-0">
-        <Scene onReady={onReady} />
+        <Scene onReady={onReady} debug={debug} />
       </div>
 
       {/* UI Overlay */}
@@ -68,7 +118,7 @@ export default function Home() {
       {/* Fade-in overlay */}
       <div
         className="pointer-events-none absolute inset-0 z-[100] bg-black transition-opacity duration-[2000ms] ease-in-out"
-        style={{ opacity: ready ? 0 : 1 }}
+        style={{ opacity: entered ? 0 : 1 }}
       />
     </main>
   )
