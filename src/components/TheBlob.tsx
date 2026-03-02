@@ -24,14 +24,14 @@ export default function TheBlob() {
     <Float speed={2} rotationIntensity={0.3} floatIntensity={0.2}>
       <Sphere ref={meshRef} args={[1.5, 128, 128]}>
         <MeshDistortMaterial 
-          color="#f5f2eb" 
+          color="#e0ddd6"
           speed={1.8}
           distort={0.42}
           radius={2}
           metalness={0.1}
-          roughness={0.2}
+          roughness={0.3}
           emissive="#ffffff"
-          emissiveIntensity={0.05}
+          emissiveIntensity={0.02}
         />
       </Sphere>
     </Float>
