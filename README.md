@@ -1,5 +1,3 @@
-# the blob
-
 ![The Blob](public/screenshot.jpg)
 
 An organic WebGL visualization exploring the intersection of geometry and life.
