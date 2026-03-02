@@ -42,17 +42,23 @@ const fragmentShader = /* glsl */ `
     // Center = looking deep into tunnel (far), edges = tunnel walls (near)
     // Dim the center to sell depth, brighten edges where walls are close
     float r = length(u - uTilt);
-    float depthFade = smoothstep(0.0, 0.6, r);
-    gl_FragColor = o * 0.3 * depthFade;
+    float depthFade = smoothstep(0.15, 1.1, r);
+    gl_FragColor = o * 0.2 * depthFade;
   }
 `
 
-// Damping factor — lower = smoother/slower (0 = frozen, 1 = instant)
-const DAMPING = 0.015
-// How much tilt maps to UV offset
-const TILT_SCALE = 0.001
-// Ignore gyro readings below this threshold (degrees) to kill jitter
-const DEAD_ZONE = 1.5
+// Damping — lower = smoother/slower (iOS springboard feel)
+const DAMPING = 0.04
+// UV offset per degree of tilt
+const TILT_SCALE = 0.0012
+// Max tilt range in degrees (clamp to avoid extreme offsets)
+const MAX_TILT = 25
+// Dead zone in degrees to kill sensor jitter
+const DEAD_ZONE = 0.8
+
+function clamp(v: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, v))
+}
 
 export default function Tunnel() {
   const materialRef = useRef<THREE.ShaderMaterial>(null!)
@@ -66,21 +72,26 @@ export default function Tunnel() {
   }), [])
 
   useEffect(() => {
-    let prevGamma = 0
-    let prevBeta = 0
+    let smoothGamma = 0
+    let smoothBeta = 0
 
     const onOrientation = (e: DeviceOrientationEvent) => {
-      let gamma = e.gamma ?? 0
-      let beta = e.beta ?? 0
+      const gamma = e.gamma ?? 0  // left-right: -90 to 90
+      const beta = e.beta ?? 0    // front-back: -180 to 180
 
-      // Dead zone — ignore tiny movements
-      if (Math.abs(gamma - prevGamma) < DEAD_ZONE) gamma = prevGamma
-      else prevGamma = gamma
+      // iPhone held upright → beta ~90. Subtract to get deviation from neutral.
+      const tiltX = clamp(gamma, -MAX_TILT, MAX_TILT)
+      const tiltY = clamp(beta - 90, -MAX_TILT, MAX_TILT)
 
-      if (Math.abs(beta - prevBeta) < DEAD_ZONE) beta = prevBeta
-      else prevBeta = beta
+      // Dead zone — ignore tiny sensor noise
+      if (Math.abs(tiltX - smoothGamma) > DEAD_ZONE) smoothGamma = tiltX
+      if (Math.abs(tiltY - smoothBeta) > DEAD_ZONE) smoothBeta = tiltY
 
-      targetTilt.current.set(gamma * TILT_SCALE, -beta * TILT_SCALE)
+      // Opposite direction: tilt left → bg shifts right (iOS springboard parallax)
+      targetTilt.current.set(
+        -smoothGamma * TILT_SCALE,
+        smoothBeta * TILT_SCALE
+      )
     }
     window.addEventListener('deviceorientation', onOrientation)
     return () => window.removeEventListener('deviceorientation', onOrientation)

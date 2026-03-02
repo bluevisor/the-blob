@@ -69,7 +69,7 @@ export default function Scene({ onReady, debug }: { onReady?: () => void; debug?
           position={[8, 4, -2]}
           angle={0.4}
           penumbra={0.8}
-          intensity={0.5}
+          intensity={0.4}
           color="#ffffff"
         />
         {/* Minimal ambient for shadow depth */}
@@ -126,8 +126,9 @@ export default function Scene({ onReady, debug }: { onReady?: () => void; debug?
           <Bloom
             luminanceThreshold={0}
             mipmapBlur
-            intensity={0.8}
-            radius={0.8}
+            intensity={2.0}
+            radius={0.6}
+            levels={7}
           />
           <Noise opacity={0.05} />
           <Vignette eskil={false} offset={0.25} darkness={0.7} />
