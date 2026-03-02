@@ -31,4 +31,4 @@ npm start
 
 ## Credits
 
-Coded by Gemini 3.1 // John Zheng
+Coded by Gemini 3.1 & Opus 4.6 // John Zheng
