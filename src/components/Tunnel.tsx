@@ -39,9 +39,11 @@ const fragmentShader = /* glsl */ `
     vec4 e = exp(2.0 * v);
     o = (e - 1.0) / (e + 1.0);
 
-    // Depth fog — brighter as distance increases (tunnel coming toward camera)
-    float fog = exp(-d * 0.02);
-    gl_FragColor = o * 0.3 * fog;
+    // Center = looking deep into tunnel (far), edges = tunnel walls (near)
+    // Dim the center to sell depth, brighten edges where walls are close
+    float r = length(u - uTilt);
+    float depthFade = smoothstep(0.0, 0.6, r);
+    gl_FragColor = o * 0.3 * depthFade;
   }
 `
 

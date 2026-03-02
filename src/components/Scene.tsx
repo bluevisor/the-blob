@@ -2,7 +2,7 @@
 
 import { Canvas, useThree } from '@react-three/fiber'
 import { Environment, ContactShadows, PerspectiveCamera, Lightformer } from '@react-three/drei'
-import { EffectComposer, Bloom, Noise, Vignette, ToneMapping } from '@react-three/postprocessing'
+import { EffectComposer, Bloom, Noise, Vignette, ToneMapping, DepthOfField } from '@react-three/postprocessing'
 import { ToneMappingMode } from 'postprocessing'
 import { useEffect, useState } from 'react'
 import * as THREE from 'three'
@@ -117,6 +117,12 @@ export default function Scene({ onReady, debug }: { onReady?: () => void; debug?
         />
 
         <EffectComposer enableNormalPass={false}>
+          <DepthOfField
+            target={[0, 0, 0]}
+            focusDistance={0.016}
+            focalLength={0.05}
+            bokehScale={8}
+          />
           <Bloom
             luminanceThreshold={0}
             mipmapBlur
