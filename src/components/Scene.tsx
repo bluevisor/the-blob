@@ -4,6 +4,7 @@ import { Canvas } from '@react-three/fiber'
 import { Environment, ContactShadows, PerspectiveCamera } from '@react-three/drei'
 import { EffectComposer, Bloom, Noise, Vignette } from '@react-three/postprocessing'
 import TheBlob from './TheBlob'
+import Tunnel from './Tunnel'
 
 export default function Scene() {
   return (
@@ -16,6 +17,7 @@ export default function Scene() {
       <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1} castShadow />
       <pointLight position={[-10, -10, -10]} intensity={0.5} color="#ffffff" />
       
+      <Tunnel />
       <TheBlob />
       
       <Environment preset="studio" />
