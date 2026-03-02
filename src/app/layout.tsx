@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LIFEFORCE // ASD REIMAGINED",
-  description: "An organic WebGL experience inspired by the 2007 demoscene masterpiece.",
+  title: "THE BLOB",
+  description: "An organic WebGL visualization exploring the intersection of geometry and life.",
 };
 
 export default function RootLayout({

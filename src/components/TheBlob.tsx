@@ -5,28 +5,29 @@ import { useFrame } from '@react-three/fiber'
 import { MeshDistortMaterial, Sphere, Float } from '@react-three/drei'
 import * as THREE from 'three'
 
-export default function OrganicPneuma() {
+export default function TheBlob() {
   const meshRef = useRef<THREE.Mesh>(null!)
   
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const t = state.clock.getElapsedTime()
-    meshRef.current.rotation.x = Math.cos(t / 4) / 8
-    meshRef.current.rotation.y = Math.sin(t / 4) / 8
-    meshRef.current.rotation.z = Math.sin(t / 4) / 8
-    
-    // Pulse scale
-    const s = 1 + Math.sin(t * 1.5) * 0.05
+
+    // Slow continuous self-rotation
+    meshRef.current.rotation.y += delta * 0.03
+    meshRef.current.rotation.x += delta * 0.05
+
+    // Gentle breathing pulse (~0.3 Hz)
+    const s = 1 + Math.sin(t * 0.3) * 0.03
     meshRef.current.scale.set(s, s, s)
   })
 
   return (
-    <Float speed={2} rotationIntensity={0.5} floatIntensity={0.5}>
-      <Sphere ref={meshRef} args={[1, 128, 128]}>
+    <Float speed={2} rotationIntensity={0.3} floatIntensity={0.2}>
+      <Sphere ref={meshRef} args={[1.5, 128, 128]}>
         <MeshDistortMaterial 
           color="#f5f2eb" 
-          speed={3} 
-          distort={0.4} 
-          radius={1}
+          speed={1.8}
+          distort={0.42}
+          radius={2}
           metalness={0.1}
           roughness={0.2}
           emissive="#ffffff"

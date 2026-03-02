@@ -1,7 +1,13 @@
+@import "tailwindcss";
+
 :root {
   --c-black: #000000;
   --c-white: #ffffff;
   --c-cream: #f5f2eb;
+}
+
+html {
+  height: 100%;
 }
 
 * {
@@ -14,7 +20,8 @@ body {
   background: var(--c-black);
   color: var(--c-white);
   overflow: hidden;
-  font-family: 'Inter', sans-serif;
+  height: 100vh;
+  font-family: "Inter", sans-serif;
 }
 
 canvas {
