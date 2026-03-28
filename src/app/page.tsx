@@ -18,7 +18,7 @@ function isFS() {
   return !!(d.fullscreenElement ?? d.webkitFullscreenElement)
 }
 
-function FullscreenButton() {
+function FullscreenButton({ disabled = false }: { disabled?: boolean }) {
   const toggle = useCallback(() => {
     if (isFS()) {
       exitFS()
@@ -30,8 +30,9 @@ function FullscreenButton() {
   return (
     <button
       onClick={toggle}
-      className="pointer-events-auto opacity-50 hover:opacity-100 transition-opacity"
+      className="pointer-events-auto opacity-50 hover:opacity-100 transition-opacity disabled:pointer-events-none"
       aria-label="Toggle fullscreen"
+      disabled={disabled}
     >
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
         <path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4" />
@@ -44,13 +45,41 @@ export default function Home() {
   const [debug, setDebug] = useState(false)
   const [ready, setReady] = useState(false)
   const [entered, setEntered] = useState(false)
+  const [uiVisible, setUiVisible] = useState(true)
   const onReady = useCallback(() => setReady(true), [])
 
   const [isTouch, setIsTouch] = useState(false)
 
   useEffect(() => {
-    setIsTouch('ontouchstart' in window || navigator.maxTouchPoints > 0)
-    setDebug(new URLSearchParams(window.location.search).get('debug') === 'true')
+    const frame = window.requestAnimationFrame(() => {
+      setIsTouch('ontouchstart' in window || navigator.maxTouchPoints > 0)
+      setDebug(new URLSearchParams(window.location.search).get('debug') === 'true')
+    })
+
+    return () => window.cancelAnimationFrame(frame)
+  }, [])
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      const tagName = target?.tagName
+      const isInteractive =
+        target?.isContentEditable ||
+        tagName === 'INPUT' ||
+        tagName === 'TEXTAREA' ||
+        tagName === 'SELECT' ||
+        tagName === 'BUTTON'
+
+      if (event.code !== 'Space' || event.repeat || isInteractive) {
+        return
+      }
+
+      event.preventDefault()
+      setUiVisible((visible) => !visible)
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
 
   const handleEnter = useCallback(() => {
@@ -87,12 +116,16 @@ export default function Home() {
       </div>
 
       {/* UI Overlay */}
-      <div className="absolute inset-2 sm:inset-3 md:inset-4 z-10 flex flex-col justify-between p-4 sm:p-6 md:p-8 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] pointer-events-none">
+      <div
+        className="absolute inset-2 sm:inset-3 md:inset-4 z-10 flex flex-col justify-between p-4 sm:p-6 md:p-8 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] pointer-events-none transition-opacity duration-500 ease-in-out"
+        style={{ opacity: uiVisible ? 1 : 0 }}
+        aria-hidden={!uiVisible}
+      >
         <header className="flex justify-between items-start shrink-0">
           <div className="text-[10px] sm:text-xs tracking-[0.4em] uppercase opacity-50">
             THE BLOB // 2026
           </div>
-          <FullscreenButton />
+          <FullscreenButton disabled={!uiVisible} />
         </header>
 
         <footer className="flex flex-col gap-2 sm:gap-4 shrink-0">
