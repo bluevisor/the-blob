@@ -50,6 +50,20 @@ export default function Home() {
 
   const [isTouch, setIsTouch] = useState(false)
 
+  const handleEnter = useCallback(() => {
+    // Try native Fullscreen API (works on desktop + Android Chrome)
+    try { requestFS(document.documentElement) } catch {}
+    // iOS fallback: scroll to hide address bar
+    setTimeout(() => window.scrollTo(0, 1), 50)
+    // Request gyro permission on iOS
+    try {
+      const doe = DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> }
+      doe.requestPermission?.()
+    } catch {}
+    // Delay state change so browser processes fullscreen from the gesture
+    setTimeout(() => setEntered(true), 100)
+  }, [])
+
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       setIsTouch('ontouchstart' in window || navigator.maxTouchPoints > 0)
@@ -71,6 +85,10 @@ export default function Home() {
         tagName === 'BUTTON'
 
       if (event.code !== 'Space' || event.repeat || isInteractive) {
+        if (!entered && event.code === 'Enter' && !event.repeat && !isInteractive) {
+          event.preventDefault()
+          handleEnter()
+        }
         return
       }
 
@@ -80,21 +98,7 @@ export default function Home() {
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [])
-
-  const handleEnter = useCallback(() => {
-    // Try native Fullscreen API (works on desktop + Android Chrome)
-    try { requestFS(document.documentElement) } catch {}
-    // iOS fallback: scroll to hide address bar
-    setTimeout(() => window.scrollTo(0, 1), 50)
-    // Request gyro permission on iOS
-    try {
-      const doe = DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> }
-      doe.requestPermission?.()
-    } catch {}
-    // Delay state change so browser processes fullscreen from the gesture
-    setTimeout(() => setEntered(true), 100)
-  }, [])
+  }, [entered, handleEnter])
 
   return (
     <main className="relative h-dvh w-screen overflow-hidden">
@@ -105,7 +109,7 @@ export default function Home() {
           className="absolute inset-0 z-[200] flex items-center justify-center cursor-pointer"
         >
           <div className="text-[10px] sm:text-xs tracking-[0.4em] uppercase opacity-50 animate-pulse">
-            {isTouch ? 'Tap to enter' : 'Click to enter'}
+            enter
           </div>
         </div>
       )}
