@@ -10,16 +10,10 @@ import TheBlob from './TheBlob'
 import Tunnel from './Tunnel'
 
 function ResponsiveCamera() {
-  const { camera, size } = useThree()
+  const { size } = useThree()
+  const aspect = size.width / size.height
 
-  useEffect(() => {
-    const aspect = size.width / size.height
-    // Widen FOV on narrow (portrait) screens to zoom out
-    ;(camera as THREE.PerspectiveCamera).fov = aspect < 1 ? 65 : 45
-    camera.updateProjectionMatrix()
-  }, [camera, size])
-
-  return <PerspectiveCamera makeDefault position={[0, 0, 16]} fov={45} />
+  return <PerspectiveCamera makeDefault position={[0, 0, 16]} fov={aspect < 1 ? 65 : 45} />
 }
 
 function DebugReporter({ onReport }: { onReport: (info: Record<string, string>) => void }) {
